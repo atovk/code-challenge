@@ -20,12 +20,12 @@ object KafkaStreaming {
 
     val zks = "10.0.37.226:2181,10.0.37.227:2181,10.0.37.228:2181,10.0.37.229:2181,10.0.37.230:2181"
     val bokers = "10.0.37.226:9092,10.0.37.227:9092,10.0.37.228:9092,10.0.37.229:9092,10.0.37.230:9092"
-    val groupId = "group_"
-    val topic = "".split(",").toSet
+    val groupId = "group_hongdong_test_kafka_Streaming_rate"
+    val topic = "bms133".split(",").toSet
 
     val offsets = Map[TopicPartition, Long]()
 
-
+/*
     val kafkaParams = Map[String, Object](
       ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> bokers,
       ConsumerConfig.GROUP_ID_CONFIG -> groupId,
@@ -35,7 +35,7 @@ object KafkaStreaming {
     val messages = KafkaUtils.createDirectStream(sparkStreaming, LocationStrategies.PreferConsistent,
       ConsumerStrategies.Subscribe(topic, kafkaParams, offsets))
     sparkStreaming.start()
-    sparkStreaming.awaitTermination()
+    sparkStreaming.awaitTermination()*/
 
   }
 
