@@ -3,12 +3,16 @@ package com.atovk.excise.streaming
 import kafka.utils.ZkUtils
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.spark.SparkConf
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.streaming.kafka010._
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 import scala.collection.mutable.ListBuffer
+
+/**
+  * https://www.jianshu.com/p/d2a61be73513
+  */
 
 object RealTimeSalesOffline {
 
@@ -27,9 +31,10 @@ object RealTimeSalesOffline {
       .set("spark.streaming.backpressure.initialRate", "10")
       .set("spark.streaming.kafka.maxRatePerPartition", "2")
 
-    val ssc = new StreamingContext(sparkConf, Seconds(2))
+    val sparkContext = new SparkContext(config = sparkConf)
+    sparkContext.setLogLevel("warn")
+    val ssc = new StreamingContext(sparkContext, Seconds(30))
     //    val sparkSession = SparkSession.builder().enableHiveSupport().getOrCreate()
-
     // set zk
     val zkServers = "10.0.37.226:2181,10.0.37.227:2181,10.0.37.228:2181,10.0.37.229:2181,10.0.37.230:2181"
     val zkClient = ZkUtils.createZkClient(zkServers, 30000, 30000)
@@ -65,9 +70,9 @@ object RealTimeSalesOffline {
       result.toIterator
     }).foreachRDD(rdd => {
       if (!rdd.isEmpty()) {
-        println(rdd.collect().reduce(_+_).toString)
+        println("COUNT: " + rdd.count())
+        // + " DATASET: " + rdd.collect().reduce(_+_).toString
       }
-
       offsetRanges.foreach(offsets => println(offsets.toString()))
     })
 
