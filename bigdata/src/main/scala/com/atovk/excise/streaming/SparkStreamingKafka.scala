@@ -14,7 +14,7 @@ object SparkStreamingKafka {
 
     val ssc = new StreamingContext(sparkconf, Seconds(2))
 
-    val brokers = "nn205.uat.yonghui.cn:9092,nn206.uat.yonghui.cn:9092,slave207.uat.yonghui.cn:9092,slave208.uat.yonghui.cn:9092,slave209.uat.yonghui.cn:9092"
+    val brokers = "nn205:9092,nn206:9092,slave207:9092,slave208:9092,slave209:9092"
     val topics = "order_db.t_trade_order_header"
     val groupId = "consumer-guoyq"
 
