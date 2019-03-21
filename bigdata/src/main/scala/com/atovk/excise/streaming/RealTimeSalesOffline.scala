@@ -1,7 +1,10 @@
 package com.atovk.excise.streaming
 
+import java.io.PrintWriter
+
 import kafka.utils.ZkUtils
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
@@ -28,12 +31,12 @@ object RealTimeSalesOffline {
       .set("spark.streaming.blockInterval", "200")
       .set("spark.streaming.stopGracefullyOnShutdown", "true")
       .set("spark.streaming.backpressure.enabled", "true")
-      .set("spark.streaming.backpressure.initialRate", "10")
-      .set("spark.streaming.kafka.maxRatePerPartition", "2")
+      .set("spark.streaming.backpressure.initialRate", "2")
+      .set("spark.streaming.kafka.maxRatePerPartition", "1")
 
     val sparkContext = new SparkContext(config = sparkConf)
     sparkContext.setLogLevel("warn")
-    val ssc = new StreamingContext(sparkContext, Seconds(30))
+    val ssc = new StreamingContext(sparkContext, Seconds(14))
     //    val sparkSession = SparkSession.builder().enableHiveSupport().getOrCreate()
     // set zk
     val zkServers = "10.0.37.226:2181,10.0.37.227:2181,10.0.37.228:2181,10.0.37.229:2181,10.0.37.230:2181"
@@ -54,24 +57,40 @@ object RealTimeSalesOffline {
 //      ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "earliest"
     )
 
+    val offsets = Map[TopicPartition, Long](
+      new TopicPartition(topics, 0) -> 32604068 ,
+      new TopicPartition(topics, 1) -> 32608032 ,
+      new TopicPartition(topics, 2) -> 32607120 ,
+      new TopicPartition(topics, 3) -> 32604444 ,
+      new TopicPartition(topics, 4) -> 32604787
+    )
+
     val messages = KafkaUtils.createDirectStream[String, String](
       ssc, LocationStrategies.PreferConsistent,
-      ConsumerStrategies.Subscribe[String, String](topicsSet, kafkaParams))
+      ConsumerStrategies.Subscribe[String, String](topicsSet, kafkaParams, offsets))
 
 
     var offsetRanges: Array[OffsetRange] = Array.empty[OffsetRange]
-
+    val printWriter = new PrintWriter("file:records_sheet.txt")
     messages.transform(rdd => {
       offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
       rdd
     }).mapPartitions(records => {
       var result = new ListBuffer[String] ()
-      records.foreach(tx => result.+=(tx.value().trim))
+      records.foreach(tx => {
+        println("RECORDS:   ")
+        println(tx.value().trim)
+        result.+=(tx.value().trim)
+        printWriter.write(tx.value().trim)
+      })
       result.toIterator
     }).foreachRDD(rdd => {
       if (!rdd.isEmpty()) {
         println("COUNT: " + rdd.count())
-        // + " DATASET: " + rdd.collect().reduce(_+_).toString
+//        println(" DATASET: " + rdd.collect().reduce(_+_).toString)
+        rdd.collect().foreach(corder => {
+          //println(corder.toString)
+        })
       }
       offsetRanges.foreach(offsets => println(offsets.toString()))
     })
