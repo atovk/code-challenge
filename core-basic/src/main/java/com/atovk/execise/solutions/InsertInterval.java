@@ -55,18 +55,29 @@ public class InsertInterval {
 
     // follow up: use one loop
     public List<Interval> insertOneLoop(List<Interval> intervals, Interval newInterval) {
-        List<Interval> result = new ArrayList<>();
+        List<Interval> result = new ArrayList<>();// LinkedList
+        int size = intervals.size(), curr = 0;
 
+        for (int i = 0; i < size; i++) {
+
+            if (intervals.get(i).start > newInterval.end) {
+                result.add(intervals.get(i));
+            } else if (intervals.get(i).end < newInterval.start) {
+                result.add(intervals.get(i));
+                curr++;
+            } else {
+                newInterval.start = Math.min(newInterval.start, intervals.get(i).start);
+                newInterval.end = Math.max(newInterval.end, intervals.get(i).end);
+            }
+        }
+        result.add(curr, newInterval);
         return result;
     }
 
-
-
-
     public static void main(String[] args) {
-        List<Interval> insert = new InsertInterval().insert(
-                (List<Interval>) Arrays.asList(new Interval(1, 2), new Interval(5, 9)),
-                new Interval(2, 5));
+        List<Interval> insert = new InsertInterval().insertOneLoop(
+                (List<Interval>) Arrays.asList(new Interval(1, 5)),
+                new Interval(0, 0));
     }
 }
 
