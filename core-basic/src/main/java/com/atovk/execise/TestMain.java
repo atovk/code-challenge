@@ -6,6 +6,7 @@ public class TestMain {
 
     public static void main(String[] args) {
 
+/*
         int a = 10;
         int b = 20;
         int c = 10;
@@ -16,6 +17,16 @@ public class TestMain {
         System.out.println(b);
         System.out.println(c);
 
+*/
+
+        int s = 0;
+        while (s < 20) {
+            System.out.println(s++);
+        }
+
+        for (int i = 0; i < 20; i++) {
+
+        }
 
 
 
