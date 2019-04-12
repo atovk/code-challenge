@@ -17,10 +17,10 @@ public class SearchRange {
             } else r = mid;
         }
 
-        if (A[r] == target) {
-            result[0] = r;
-        } else if (A[l] == target) {
+        if (A[l] == target) {
             result[0] = l;
+        } else if (A[r] == target) {
+            result[0] = r;
         } else {
             result[0] = result[1] = -1;
             return result;
@@ -38,10 +38,10 @@ public class SearchRange {
             } else l = mid;
         }
 
-        if (A[l] == target) {
-            result[1] = l;
-        } else if (A[r] == target) {
+         if (A[r] == target) {
             result[1] = r;
+        } else if (A[l] == target) {
+            result[1] = l;
         } else {
             result[0] = result[1] = -1;
             return result;
@@ -58,7 +58,7 @@ public class SearchRange {
         start = 0;
         end = A.length - 1;
         while (start + 1 < end) {
-            mid = (end = start) / 2 + start;
+            mid = (end - start) / 2 + start;
             if (A[mid] == target) {
                 end = mid;
             } else if (A[mid] < target) {
@@ -77,7 +77,7 @@ public class SearchRange {
         start = 0;
         end = A.length - 1;
         while (start + 1 < end) {
-            mid = (end = start) / 2 + start;
+            mid = (end - start) / 2 + start;
             if (A[mid] == target) {
                 start = mid;
             } else if (A[mid] < target) {
