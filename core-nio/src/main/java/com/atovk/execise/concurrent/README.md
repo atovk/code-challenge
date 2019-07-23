@@ -151,3 +151,14 @@ Available:表示系统当前剩下的资源。
 work:表示系统当前剩下的资源数；
 
  ![](./concurrent_bank_B.jpg)
+ 
+ ### java 管程
+ 
+ >Hasen 模型, Hoare 模型, MESA 模型
+ 
+ - 互斥 同一时刻只允许一个线程访问资源
+ - 同步 线程间的通信，协作
+ 
+ 
+ 
+ 
