@@ -203,6 +203,10 @@ ACC_SYNCHRONIZED
  
  轻量级锁失败后，虚拟机为了避免线程真实地在操作系统层面挂起，还会进行一项称为自旋锁的优化手段。这是基于在大多数情况下，线程持有锁的时间都不会太长，如果直接挂起操作系统层面的线程可能会得不偿失，毕竟操作系统实现线程之间的切换时需要从用户态转换到核心态，这个状态之间的转换需要相对比较长的时间，时间成本相对较高，因此自旋锁会假设在不久将来，当前的线程可以获得锁，因此虚拟机会让当前想要获取锁的线程做几个空循环(这也是称为自旋的原因)，一般不会太久，可能是50个循环或100循环，在经过若干次循环后，如果得到锁，就顺利进入临界区。如果还不能获得锁，那就会将线程在操作系统层面挂起，这就是自旋锁的优化方式，这种方式确实也是可以提升效率的。最后没办法也就只能升级为重量级锁了。
  
+ - *重量级锁*
+ 
+ 线程等待不使用自旋而是直接挂起，线程会阻塞，让出CPU缓存区（等待期间不消耗CPU资源），线程响应会相较于其它慢一些（等待变量更新，重新读入缓存等操作）
+ 
  - *锁消除*
  
  消除锁是虚拟机另外一种锁的优化，这种优化更彻底，Java虚拟机在JIT编译时(可以简单理解为当某段代码即将第一次被执行时进行编译，又称即时编译)，通过对运行上下文的扫描，去除不可能存在共享资源竞争的锁，通过这种方式消除没有必要的锁，可以节省毫无意义的请求锁时间，如下StringBuffer的append是一个同步方法，但是在add方法中的StringBuffer属于一个局部变量，并且不会被其他线程所使用，因此StringBuffer不可能存在共享资源竞争的情景，JVM会自动将其锁消除。
@@ -216,3 +220,195 @@ ACC_SYNCHRONIZED
   > ReentrantLock中定义了2个静态内部类，一个是NotFairSync，一个是FairSync，分别用来实现非公平锁和公平锁。
   
 #### 读写锁
+
+
+### lock
+
+> https://coderbee.net/index.php/concurrent/20131115/577/comment-page-1
+
+#### 自旋锁（SPIN LOCK）
+
+> 自旋锁是指当一个线程尝试获取某个锁时，如果该锁已被其他线程占用，就一直循环检测锁是否被释放，而不是进入线程挂起或睡眠状态。
+  自旋锁适用于锁保护的临界区很小的情况，临界区很小的话，锁占用的时间就很短。
+
+## 自旋锁、排队自旋锁、MCS锁、CLH锁
+
+发表于[2013\-11\-15](https://coderbee.net/index.php/concurrent/20131115/577 "10:40") 由[coderbee](https://coderbee.net/index.php/author/coderbee "查看所有由coderbee发布的文章")
+
+### 自旋锁（Spin lock）
+
+自旋锁是指当一个线程尝试获取某个锁时，如果该锁已被其他线程占用，就一直循环检测锁是否被释放，而不是进入线程挂起或睡眠状态。
+
+自旋锁适用于锁保护的临界区很小的情况，临界区很小的话，锁占用的时间就很短。
+
+#### 简单的实现
+
+```java
+import java.util.concurrent.atomic.AtomicReference;
+
+public class SpinLock {
+   private AtomicReference<Thread> owner = new AtomicReference<Thread>();
+
+   public void lock() {
+       Thread currentThread = Thread.currentThread();
+
+              // 如果锁未被占用，则设置当前线程为锁的拥有者
+       while (!owner.compareAndSet(null, currentThread)) {
+       }
+   }
+
+   public void unlock() {
+       Thread currentThread = Thread.currentThread();
+
+              // 只有锁的拥有者才能释放锁
+       owner.compareAndSet(currentThread, null);
+   }
+}
+
+```
+
+SimpleSpinLock里有一个owner属性持有锁当前拥有者的线程的引用，如果该引用为null，则表示锁未被占用，不为null则被占用。
+
+这里用AtomicReference是为了使用它的原子性的compareAndSet方法（CAS操作），解决了多线程并发操作导致数据不一致的问题，确保其他线程可以看到锁的真实状态。
+
+#### 缺点
+
+1.  CAS操作需要硬件的配合；
+2.  保证各个CPU的缓存（L1、L2、L3、跨CPU Socket、主存）的数据一致性，通讯开销很大，在多处理器系统上更严重；
+3.  没法保证公平性，不保证等待进程/线程按照FIFO顺序获得锁。
+
+### Ticket Lock
+
+Ticket Lock 是为了解决上面的公平性问题，类似于现实中银行柜台的排队叫号：锁拥有一个服务号，表示正在服务的线程，还有一个排队号；每个线程尝试获取锁之前先拿一个排队号，然后不断轮询锁的当前服务号是否是自己的排队号，如果是，则表示自己拥有了锁，不是则继续轮询。
+
+当线程释放锁时，将服务号加1，这样下一个线程看到这个变化，就退出自旋。
+
+#### 简单的实现
+
+```java
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class TicketLock {
+   private AtomicInteger serviceNum = new AtomicInteger(); // 服务号
+   private AtomicInteger ticketNum = new AtomicInteger(); // 排队号
+
+   public int lock() {
+         // 首先原子性地获得一个排队号
+         int myTicketNum = ticketNum.getAndIncrement();
+
+              // 只要当前服务号不是自己的就不断轮询
+       while (serviceNum.get() != myTicketNum) {
+       }
+
+       return myTicketNum;
+    }
+
+    public void unlock(int myTicket) {
+        // 只有当前线程拥有者才能释放锁
+        int next = myTicket + 1;
+        serviceNum.compareAndSet(myTicket, next);
+    }
+}
+
+```
+
+#### 缺点
+
+Ticket Lock 虽然解决了公平性的问题，但是多处理器系统上，每个进程/线程占用的处理器都在读写同一个变量serviceNum ，每次读写操作都必须在多个处理器缓存之间进行缓存同步，这会导致繁重的系统总线和内存的流量，大大降低系统整体的性能。
+
+下面介绍的CLH锁和MCS锁都是为了解决这个问题的。
+
+MCS 来自于其发明人名字的首字母： John Mellor\-Crummey和Michael Scott。
+
+CLH的发明人是：Craig，Landin and Hagersten。
+
+### MCS锁
+
+MCS Spinlock 是一种基于链表的可扩展、高性能、公平的自旋锁，申请线程只在本地变量上自旋，直接前驱负责通知其结束自旋，从而极大地减少了不必要的处理器缓存同步的次数，降低了总线和内存的开销。
+
+```java
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+public class MCSLock {
+    public static class MCSNode {
+        volatile MCSNode next;
+        volatile boolean isBlock = true; // 默认是在等待锁
+    }
+
+    volatile MCSNode queue;// 指向最后一个申请锁的MCSNode
+    private static final AtomicReferenceFieldUpdater UPDATER = AtomicReferenceFieldUpdater
+            .newUpdater(MCSLock.class, MCSNode.class, "queue");
+
+    public void lock(MCSNode currentThread) {
+        MCSNode predecessor = UPDATER.getAndSet(this, currentThread);// step 1
+        if (predecessor != null) {
+            predecessor.next = currentThread;// step 2
+
+            while (currentThread.isBlock) {// step 3
+            }
+        }else { // 只有一个线程在使用锁，没有前驱来通知它，所以得自己标记自己为非阻塞
+               currentThread. isBlock = false;
+          }
+    }
+
+    public void unlock(MCSNode currentThread) {
+        if (currentThread.isBlock) {// 锁拥有者进行释放锁才有意义
+            return;
+        }
+
+        if (currentThread.next == null) {// 检查是否有人排在自己后面
+            if (UPDATER.compareAndSet(this, currentThread, null)) {// step 4
+                // compareAndSet返回true表示确实没有人排在自己后面
+                return;
+            } else {
+                // 突然有人排在自己后面了，可能还不知道是谁，下面是等待后续者
+                // 这里之所以要忙等是因为：step 1执行完后，step 2可能还没执行完
+                while (currentThread.next == null) { // step 5
+                }
+            }
+        }
+
+        currentThread.next.isBlock = false;
+        currentThread.next = null;// for GC
+    }
+}
+
+```
+
+### CLH锁
+
+CLH锁也是一种基于链表的可扩展、高性能、公平的自旋锁，申请线程只在本地变量上自旋，它不断轮询前驱的状态，如果发现前驱释放了锁就结束自旋。
+
+```java
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+public class CLHLock {
+    public static class CLHNode {
+        private volatile boolean isLocked = true; // 默认是在等待锁
+    }
+
+    @SuppressWarnings("unused" )
+    private volatile CLHNode tail ;
+    private static final AtomicReferenceFieldUpdater<CLHLock, CLHNode> UPDATER = AtomicReferenceFieldUpdater
+                  . newUpdater(CLHLock.class, CLHNode .class , "tail" );
+
+    public void lock(CLHNode currentThread) {
+        CLHNode preNode = UPDATER.getAndSet( this, currentThread);
+        if(preNode != null) {//已有线程占用了锁，进入自旋
+            while(preNode.isLocked ) {
+            }
+        }
+    }
+
+    public void unlock(CLHNode currentThread) {
+        // 如果队列里只有当前线程，则释放对当前线程的引用（for GC）。
+        if (!UPDATER .compareAndSet(this, currentThread, null)) {
+            // 还有后续线程
+            currentThread. isLocked = false ;// 改变状态，让后续线程结束自旋
+        }
+    }
+}
+
+```
+
+### CLH锁 与 MCS锁 的比较
