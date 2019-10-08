@@ -13,6 +13,7 @@
         <module>core-basic</module>
         <module>bigdata</module>
         <module>core-nio</module>
+        <module>and-design</module>
     </modules>
 
     <repositories>
