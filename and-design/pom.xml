@@ -12,5 +12,20 @@
     <groupId>com.atovk.design</groupId>
     <artifactId>and-design</artifactId>
 
+    <dependencies>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.1.20</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>3.4.1</version>
+        </dependency>
+
+    </dependencies>
 
 </project>
