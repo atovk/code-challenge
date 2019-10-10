@@ -11,12 +11,17 @@ import java.sql.SQLException;
 
 public class DruidTestMain {
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws Exception {
 
         DruidDataSource druidDataSource = new DruidDataSource();
         PooledConnection pooledConnection = druidDataSource.getPooledConnection();
 
         Connection connection1 = pooledConnection.getConnection();
+
+
+        new DruidDataSourceFactory().getObjectInstance(null, null, null, null);
+
+
 
 
         Connection connection = pooledConnection.getConnection();

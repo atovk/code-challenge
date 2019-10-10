@@ -8,10 +8,34 @@ package com.atovk.design.exec;
  */
 public interface Executor<T> {
 
+    /**
+     * 执行 SQL 语句
+     * @param execStr
+     * @return
+     */
     T exec(String execStr);
 
+    /**
+     * 获取运行状态 （true：正在执行脚本，false：无任务执行）
+     * @return
+     */
     boolean state();
 
+    /**
+     * 获取当前执行器中执行的任务数
+     * @return
+     */
     int count();
+
+    /**
+     * 获取但前执行器唯一 ID
+     * @return
+     */
+    String hashId();
+
+    /**
+     * 销毁当前执行器
+     */
+    void destroy();
 
 }
