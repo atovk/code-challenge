@@ -1,12 +1,13 @@
 package com.atovk.design.exec;
 
 import com.alibaba.druid.pool.DruidDataSource;
-import com.zaxxer.hikari.HikariDataSource;
+import com.alibaba.druid.pool.DruidPooledConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,29 +25,37 @@ public class SQLExecutor implements Executor {
 
     SQLExecutor(String key, Map<String, String> maps) {
         this.ID = key;
-        this.dataSource =(DruidDataSource) DataSourceConfigurationAdapter.druidDataSource(maps);
+        this.dataSource = (DruidDataSource) DataSourceConfigurationAdapter.druidDataSource(maps);
         this.className = this.dataSource.getClass().toGenericString();
     }
 
     @Override
     public ResultSet exec(String sql) {
-
-        return null;
+        ResultSet resultSet = null;
+        try {
+            DruidPooledConnection connection = dataSource.getConnection();
+            Statement statement = connection.createStatement();
+            resultSet = statement.executeQuery(sql);
+        } catch (SQLException e) {
+            LOGGER.error("获取连接异常.");
+            e.printStackTrace();
+        }
+        return resultSet;
     }
 
     @Override
     public boolean state() {
-        return false;
+        return dataSource.isEnable();
     }
 
     @Override
     public int count() {
-        return 0;
+        return dataSource.getActiveCount();
     }
 
     @Override
     public String hashId() {
-        return null;
+        return this.ID;
     }
 
     /**
@@ -54,6 +63,6 @@ public class SQLExecutor implements Executor {
      */
     @Override
     public void destroy() {
-
+        dataSource.close();
     }
 }

@@ -15,7 +15,6 @@ public class DataSourceConfigurationAdapter {
 
     /**
      *  新建 Druid 连接池数据源
-     * @param sourceClass
      * @param maps
      * @return
      */
