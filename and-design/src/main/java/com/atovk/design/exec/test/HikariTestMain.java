@@ -32,6 +32,8 @@ public class HikariTestMain {
         hikariDataSource10.setDataSource(null);
         hikariDataSource10.setDataSourceProperties(new Properties());
 
+        DruidPooledConnection connection2 = dataSource.getConnection();
+        connection2.close();
 
 
         Connection connection1 = hikariDataSource.getConnection();
