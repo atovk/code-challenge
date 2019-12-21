@@ -1,37 +1,32 @@
 package com.atovk.execise.mutiple.pool;
 
-import com.alibaba.druid.pool.DruidAbstractDataSource;
-import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.druid.pool.DruidDataSourceFactory;
-import com.alibaba.druid.pool.DruidPooledConnection;
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
+import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
+import com.alibaba.druid.util.JdbcConstants;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class JDBCConnectPoolTest {
 
 
     public static void main(String[] args) throws Exception {
 
-        Map<Object, Object> map = new HashMap<>();
+        String sql = "select a.name, b.id, a.class, a.age, b.ids " +
+                "from test.test_table a left join test.table_b b on a.id=b.id where a.id > 100" ;
 
-        DataSource dataSource = DruidDataSourceFactory.createDataSource(map);
+        String sqlb = "select a.name, a.age, b.class from (select name, age from student) a inner join school b on a.id=b.id";
 
-        Connection connection = dataSource.getConnection();
+        List<SQLStatement> statements = SQLUtils.parseStatements(sqlb, JdbcConstants.MYSQL);
 
-        DruidDataSource druidDataSource = new DruidDataSource();
-        DruidPooledConnection druidPooledConnection = druidDataSource.getConnection();
-
-        PreparedStatement tables = druidPooledConnection.prepareStatement("show tables");
-
-        // 一个数据源配置 只能实例话出一个 connection 实例
+        SQLSelectOrderByItem sqlSelectOrderByItem = SQLUtils.toOrderByItem(sql, JdbcConstants.MYSQL);
 
 
+        SQLSelectItem sqlSelectItem = SQLUtils.toSelectItem(sql, JdbcConstants.MYSQL);
 
 
+        System.out.println();
     }
 
 
