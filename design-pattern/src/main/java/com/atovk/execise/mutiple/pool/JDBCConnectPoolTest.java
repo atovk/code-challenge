@@ -4,8 +4,11 @@ import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
+import com.alibaba.druid.sql.visitor.SchemaStatVisitor;
+import com.alibaba.druid.stat.TableStat;
 import com.alibaba.druid.util.JdbcConstants;
 
+import java.util.Collection;
 import java.util.List;
 
 public class JDBCConnectPoolTest {
@@ -25,6 +28,13 @@ public class JDBCConnectPoolTest {
 
         SQLSelectItem sqlSelectItem = SQLUtils.toSelectItem(sql, JdbcConstants.MYSQL);
 
+
+        SchemaStatVisitor visitor = SQLUtils.createSchemaStatVisitor(JdbcConstants.MYSQL);
+        for (SQLStatement stmt : statements) {
+            stmt.accept(visitor);
+        }
+
+        Collection<TableStat.Column> columns = visitor.getColumns();
 
         System.out.println();
     }

@@ -1,0 +1,87 @@
+{
+  "type" : "record",
+  "name" : "sale_j",
+  "namespace" : "rt",
+  "fields" : [ {
+    "name" : "ShopID",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "SDate",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "STime",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "ListNo",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "PosID",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "CashierID",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "WaiterID",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "GoodsID",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "DeptID",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "Amount",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "ColorSize",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "SaleValue",
+    "type" : [ "null", "double" ]
+  }, {
+    "name" : "DiscValue",
+    "type" : [ "null", "double" ]
+  }, {
+    "name" : "SaleType",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "DiscType",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "AuthorizerID",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "X",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "Price",
+    "type" : [ "null", "double" ]
+  }, {
+    "name" : "UseBarCodeID",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "DeliverFlag",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "TrainFlag",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "Flag",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "dt",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "NoJF",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "rowno",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "retqty",
+    "type" : [ "null", "double" ]
+  } , {
+    "name" : "SapStoreId",
+    "type" : [ "null", "string" ]
+  }]
+}
