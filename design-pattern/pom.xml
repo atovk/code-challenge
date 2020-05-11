@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.atovk.exercise.pattern</groupId>
     <artifactId>design-pattern</artifactId>
+    <packaging>pom</packaging>
 
     <modules>
         <module>pipline-pattern</module>
