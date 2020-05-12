@@ -15,6 +15,7 @@
     <modules>
         <module>pipline-pattern</module>
         <module>command-pattern</module>
+        <module>mediator-pattern</module>
     </modules>
 
     <dependencies>
