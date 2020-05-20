@@ -17,6 +17,7 @@
         <module>command-pattern</module>
         <module>mediator-pattern</module>
         <module>memento-pattern</module>
+        <module>singleton-pattern</module>
     </modules>
 
     <dependencies>
